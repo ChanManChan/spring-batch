@@ -4,9 +4,13 @@ import com.u4.springbatch.testutils.CourseUtilBatchTestConfig;
 import org.junit.jupiter.api.Test;
 import org.springframework.batch.core.*;
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
+import org.springframework.batch.core.configuration.annotation.JobScope;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
+import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.step.builder.SimpleStepBuilder;
 import org.springframework.batch.item.ItemProcessor;
+import org.springframework.batch.item.ItemReader;
+import org.springframework.batch.item.ItemWriter;
 import org.springframework.batch.item.json.JacksonJsonObjectMarshaller;
 import org.springframework.batch.item.json.JacksonJsonObjectReader;
 import org.springframework.batch.item.json.JsonFileItemWriter;
@@ -15,6 +19,7 @@ import org.springframework.batch.item.json.builder.JsonFileItemWriterBuilder;
 import org.springframework.batch.item.json.builder.JsonItemReaderBuilder;
 import org.springframework.batch.test.JobLauncherTestUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -35,11 +40,26 @@ class StepScopeTest {
 
     @Test
     void runJob() throws Exception {
-        JobParameters jobParameters = new JobParametersBuilder()
-                .toJobParameters();
+        {
+            JobParameters jobParameters = new JobParametersBuilder()
+                    .addParameter("inputPath", new JobParameter("classpath:files/_A/input.json"))
+                    .addParameter("outputPath", new JobParameter("output/output1.json"))
+                    .addParameter("chunkSize", new JobParameter(1L))
+                    .toJobParameters();
 
-        JobExecution jobExecution = jobLauncherTestUtils.launchJob(jobParameters);
-        assertEquals(BatchStatus.COMPLETED, jobExecution.getStatus());
+            JobExecution jobExecution = jobLauncherTestUtils.launchJob(jobParameters);
+            assertEquals(BatchStatus.COMPLETED, jobExecution.getStatus());
+        }
+        {
+            JobParameters jobParameters = new JobParametersBuilder()
+                    .addParameter("inputPath", new JobParameter("classpath:files/_A/input.json"))
+                    .addParameter("outputPath", new JobParameter("output/output2.json"))
+                    .addParameter("chunkSize", new JobParameter(2L))
+                    .toJobParameters();
+
+            JobExecution jobExecution = jobLauncherTestUtils.launchJob(jobParameters);
+            assertEquals(BatchStatus.COMPLETED, jobExecution.getStatus());
+        }
     }
 
     @SuppressWarnings("WeakerAccess")
@@ -53,21 +73,24 @@ class StepScopeTest {
         private StepBuilderFactory stepBuilderFactory;
 
         @Bean
-        public Job job() {
+        public Job job(ItemReader<InputData> reader, ItemWriter<OutputData> writer) {
             return jobBuilderFactory.get("myJob")
-                    .start(readerStep())
+                    .start(readerStep(reader, writer, null))
                     .build();
         }
 
         @Bean
-        public Step readerStep() {
+        @JobScope
+        public Step readerStep(ItemReader<InputData> reader, ItemWriter<OutputData> writer, @Value("#{jobParameters['chunkSize']}") Integer chunkSize) {
             SimpleStepBuilder<InputData, OutputData> simpleStepBuilder
                     = stepBuilderFactory.get("readJsonStep")
-                    .chunk(1);
+                    .chunk(chunkSize);
 
-            return simpleStepBuilder.reader(reader())
+            return simpleStepBuilder
+                    .reader(reader)
                     .processor(processor())
-                    .writer(writer()).build();
+                    .writer(writer)
+                    .build();
         }
 
         private ItemProcessor<InputData, OutputData> processor() {
@@ -79,10 +102,11 @@ class StepScopeTest {
         }
 
         @Bean
-        public JsonItemReader<InputData> reader() {
+        @StepScope
+        public JsonItemReader<InputData> reader(@Value("#{jobParameters['inputPath']}") String inputPath) {
             File file;
             try {
-                file = ResourceUtils.getFile("classpath:files/_A/input.json");
+                file = ResourceUtils.getFile(inputPath);
             } catch (FileNotFoundException ex) {
                 throw new IllegalArgumentException(ex);
             }
@@ -94,8 +118,9 @@ class StepScopeTest {
         }
 
         @Bean
-        public JsonFileItemWriter<OutputData> writer() {
-            Resource outputResource = new FileSystemResource("output/output.json");
+        @StepScope
+        public JsonFileItemWriter<OutputData> writer(@Value("#{jobParameters['outputPath']}") String outputPath) {
+            Resource outputResource = new FileSystemResource(outputPath);
 
             return new JsonFileItemWriterBuilder<OutputData>()
                     .jsonObjectMarshaller(new JacksonJsonObjectMarshaller<>())
