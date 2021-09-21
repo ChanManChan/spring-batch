@@ -50,7 +50,7 @@ class AnnotationListenerTest {
         @Bean
         public Job annotationListenerTest() {
             Step step = stepBuilderFactory.get("step")
-                    .chunk(1)
+                    .chunk(2)
                     .reader(readerWithBeforeAndAfterStep)
                     .writer(items -> {
 

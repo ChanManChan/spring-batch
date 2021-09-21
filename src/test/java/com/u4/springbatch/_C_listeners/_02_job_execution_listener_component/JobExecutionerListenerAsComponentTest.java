@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.batch.core.*;
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
+import org.springframework.batch.core.configuration.annotation.JobScope;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
 import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.batch.test.JobLauncherTestUtils;
@@ -13,7 +14,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-@SpringBootTest(classes = {JobExecutionerListenerAsComponentTest.TestConfig.class})
+@SpringBootTest(classes = {JobExecutionerListenerAsComponentTest.TestConfig.class, JobListenerAsComponent.class, StepResultHolder.class})
 class JobExecutionerListenerAsComponentTest {
 
     @Autowired
@@ -37,16 +38,29 @@ class JobExecutionerListenerAsComponentTest {
         @Autowired
         private StepBuilderFactory stepBuilderFactory;
 
-        @Bean
-        public Job executionListenerJob() {
-            Step step = stepBuilderFactory.get("annotationListenerTest")
-                    .tasklet((contribution, chunkContext) -> {
-                        return RepeatStatus.FINISHED;
-                    }).build();
+        @Autowired
+        private JobListenerAsComponent jobListenerAsComponent;
 
+        @Autowired
+        private StepResultHolder stepResultHolder;
+
+        @Bean
+        public Job executionListenerJob(Step step) {
             return jobBuilderFactory.get("helloWorldJob")
                     .start(step)
+                    .listener(jobListenerAsComponent)
                     .build();
+        }
+
+        @Bean
+        @JobScope
+        public Step step(StepResultHolder stepResultHolder) {
+            return stepBuilderFactory.get("annotationListenerTest")
+                    .tasklet((contribution, chunkContext) -> {
+                        String result = "Tasklet result from step";
+                        stepResultHolder.setResult(result);
+                        return RepeatStatus.FINISHED;
+                    }).build();
         }
 
         @Bean

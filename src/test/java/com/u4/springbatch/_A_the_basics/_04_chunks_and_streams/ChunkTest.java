@@ -3,10 +3,10 @@ package com.u4.springbatch._A_the_basics._04_chunks_and_streams;
 import com.u4.springbatch.testutils.CourseUtilBatchTestConfig;
 import com.u4.springbatch.testutils.CourseUtilsJsonData;
 import com.u4.springbatch.utils.CourseUtils;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.batch.core.*;
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
+import org.springframework.batch.core.configuration.annotation.JobScope;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.repository.JobRepository;
@@ -36,11 +36,11 @@ class ChunkTest {
     private JobLauncherTestUtils jobLauncherTestUtils;
 
     @Test
-    @Disabled
     void runJob() throws Exception {
         JobParameters jobParameters = new JobParametersBuilder()
                 .addParameter("inputPath", new JobParameter("classpath:files/_A/chunkTest.json"))
                 .addParameter("outputPath", new JobParameter("output/chunkOutput.json"))
+                .addParameter("chunkSize", new JobParameter(4L))
                 .toJobParameters();
 
         JobExecution jobExecution = jobLauncherTestUtils.launchJob(jobParameters);
@@ -64,15 +64,16 @@ class ChunkTest {
         @Bean
         public Job job() {
             return jobBuilderFactory.get("myJob")
-                    .start(step())
+                    .start(step(null))
                     .build();
         }
 
         @Bean
-        public Step step() {
+        @JobScope
+        public Step step(@Value("#{jobParameters['chunkSize']}") Integer chunkSize) {
             SimpleStepBuilder<ChunkTestInputData, ChunkTestOutputData> chunk = stepBuilderFactory.get("jsonItemReader")
                     .repository(jobRepository)
-                    .chunk(1);
+                    .chunk(chunkSize);
             return chunk.reader(jsonItemReader(null))
                     .processor(processor())
                     .writer(writer(null))
@@ -83,6 +84,9 @@ class ChunkTest {
         public ItemProcessor<ChunkTestInputData, ChunkTestOutputData> processor() {
             return item -> {
                 ChunkTestOutputData outputData = new ChunkTestOutputData();
+                if (item.value.equals("Six")) {
+                    throw new RuntimeException("Simulate error");
+                }
                 outputData.value = item.value.toUpperCase();
                 return outputData;
             };
@@ -113,7 +117,8 @@ class ChunkTest {
 
         public static class ChunkTestInputData extends CourseUtilsJsonData {
         }
-        public static class ChunkTestOutputData extends CourseUtilsJsonData{
+
+        public static class ChunkTestOutputData extends CourseUtilsJsonData {
         }
     }
 

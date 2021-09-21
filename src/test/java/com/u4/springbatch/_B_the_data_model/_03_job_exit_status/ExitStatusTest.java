@@ -54,23 +54,32 @@ class ExitStatusTest {
         public Job job() {
             Job myJob = jobBuilderFactory.get("myJob")
                     .start(step())
+                    .next(step2())
                     .listener(new CourseUtilJobSummaryListener())
                     .build();
             return myJob;
         }
-
 
         @Bean
         @JobScope
         public Step step() {
             return stepBuilderFactory.get("myFirstStep")
                     .tasklet((stepContribution, chunkContext) -> {
+                        stepContribution.setExitStatus(new ExitStatus("COMPLETED", "my custom description"));
                         return RepeatStatus.FINISHED;
                     })
                     .build();
         }
 
-
+        @Bean
+        @JobScope
+        public Step step2() {
+            return stepBuilderFactory.get("mySecondStep")
+                    .tasklet((stepContribution, chunkContext) -> {
+                        stepContribution.setExitStatus(new ExitStatus("COMPLETED", "other description"));
+                        return RepeatStatus.FINISHED;
+                    })
+                    .build();
+        }
     }
-
 }

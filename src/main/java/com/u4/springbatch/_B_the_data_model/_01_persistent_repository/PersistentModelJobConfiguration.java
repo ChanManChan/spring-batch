@@ -38,7 +38,7 @@ public class PersistentModelJobConfiguration {
                     return RepeatStatus.FINISHED;
                 }).build();
 
-        return jobBuilderFactory.get("helloWorldJob")
+        return jobBuilderFactory.get("helloWorldJob2")
                 .start(step)
                 .build();
     }
