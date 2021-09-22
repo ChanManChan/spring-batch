@@ -20,7 +20,7 @@ class CronSequenceGeneratorTest {
 
     @Test
     void testCreateSequence() {
-        CronSequenceGenerator sequenceGenerator = new CronSequenceGenerator(EVERY_10_SECONDS);
+        CronSequenceGenerator sequenceGenerator = new CronSequenceGenerator(EVERY_20th_day_4th_MONTH);
         Date next = createDateJanuary2020();
 
         for (int i=0; i<10; i++) {
