@@ -1,8 +1,6 @@
 package com.u4.springbatch.practice_one;
 
-import org.springframework.batch.core.Job;
-import org.springframework.batch.core.JobParameters;
-import org.springframework.batch.core.JobParametersInvalidException;
+import org.springframework.batch.core.*;
 import org.springframework.batch.core.launch.JobLauncher;
 import org.springframework.batch.core.repository.JobExecutionAlreadyRunningException;
 import org.springframework.batch.core.repository.JobInstanceAlreadyCompleteException;
@@ -22,6 +20,11 @@ public class Anonymizer {
 
     public void runAnonymizationJob() throws JobInstanceAlreadyCompleteException,
             JobExecutionAlreadyRunningException, JobParametersInvalidException, JobRestartException {
-        jobLauncher.run(job, new JobParameters());
+        JobParameters jobParameters = new JobParametersBuilder()
+                .addParameter("inputPath", new JobParameter("classpath:files/practice_one/persons.json"))
+                .addParameter("outputPath", new JobParameter("output/output.json"))
+                .toJobParameters();
+
+        jobLauncher.run(job, jobParameters);
     }
 }

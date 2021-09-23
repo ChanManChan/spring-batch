@@ -1,55 +1,50 @@
 package com.u4.springbatch.practice_one.config;
 
-import org.springframework.batch.core.Job;
-import org.springframework.batch.core.JobInterruptedException;
-import org.springframework.batch.core.Step;
-import org.springframework.batch.core.StepExecution;
+import com.u4.springbatch.practice_one.model.Person;
+import org.springframework.batch.core.*;
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
+import org.springframework.batch.core.configuration.annotation.JobScope;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
+import org.springframework.batch.item.ItemReader;
+import org.springframework.batch.item.ItemWriter;
+import org.springframework.batch.item.json.JsonFileItemWriter;
+import org.springframework.batch.item.json.JsonItemReader;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
 
 @Configuration
 public class JobConfiguration {
 
     private final JobBuilderFactory jobBuilderFactory;
     private final StepBuilderFactory stepBuilderFactory;
+    private final ProcessorConfiguration processorConfiguration;
+    private final JsonItemReader<Person> itemReader;
+    private final JsonFileItemWriter<Person> itemWriter;
 
-    public JobConfiguration(JobBuilderFactory jobBuilderFactory, StepBuilderFactory stepBuilderFactory) {
+    public JobConfiguration(JobBuilderFactory jobBuilderFactory, StepBuilderFactory stepBuilderFactory,
+                            ProcessorConfiguration processorConfiguration, JsonItemReader<Person> itemReader, JsonFileItemWriter<Person> itemWriter) {
         this.jobBuilderFactory = jobBuilderFactory;
         this.stepBuilderFactory = stepBuilderFactory;
+        this.processorConfiguration = processorConfiguration;
+        this.itemReader = itemReader;
+        this.itemWriter = itemWriter;
     }
 
     @Bean
-    public Job job() {
+    public Job job(ItemReader<Person> reader, ItemWriter<Person> writer) {
         return jobBuilderFactory.get("anonymizeJob")
-                .start(step())
+                .start(step(reader, writer))
                 .build();
     }
 
     @Bean
-    public Step step() {
-        return new Step() {
-            @Override
-            public String getName() {
-                return "test-step";
-            }
-
-            @Override
-            public boolean isAllowStartIfComplete() {
-                return false;
-            }
-
-            @Override
-            public int getStartLimit() {
-                return 0;
-            }
-
-            @Override
-            public void execute(StepExecution stepExecution) throws JobInterruptedException {
-
-            }
-        };
+    @JobScope
+    public Step step(ItemReader<Person> reader, ItemWriter<Person> writer) {
+        return stepBuilderFactory.get("step")
+                .<Person, Person>chunk(1)
+                .reader(itemReader)
+                .processor(processorConfiguration)
+                .writer(itemWriter)
+                .build();
     }
 }
