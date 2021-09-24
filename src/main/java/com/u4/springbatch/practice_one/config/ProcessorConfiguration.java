@@ -12,8 +12,7 @@ public class ProcessorConfiguration implements ItemProcessor<Person, Person> {
     public Person process(Person person) throws Exception {
         if (Boolean.TRUE.equals(person.getIsCustomer())) {
             return person;
-        } else {
-            return null;
         }
+        return null;
     }
 }

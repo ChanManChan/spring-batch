@@ -34,13 +34,14 @@ public class JobConfiguration {
     public Job job(ItemReader<Person> reader, ItemWriter<Person> writer) {
         return jobBuilderFactory.get("anonymizeJob")
                 .start(step(reader, writer))
+                .validator(new AnonymizeJobParameterValidator())
                 .build();
     }
 
     @Bean
     @JobScope
     public Step step(ItemReader<Person> reader, ItemWriter<Person> writer) {
-        return stepBuilderFactory.get("step")
+        return stepBuilderFactory.get("anonymizeStep")
                 .<Person, Person>chunk(1)
                 .reader(itemReader)
                 .processor(processorConfiguration)

@@ -11,12 +11,14 @@ import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Component;
 
+import static com.u4.springbatch.practice_one.config.AnonymizeJobParameterKeys.OUTPUT_PATH_REFERENCE;
+
 @Component
 public class WriterConfiguration {
 
     @Bean("jsonItemWriter")
     @StepScope
-    public JsonFileItemWriter<Person> writer(@Value("#{jobParameters['outputPath']}") String outputPath) {
+    public JsonFileItemWriter<Person> writer(@Value(OUTPUT_PATH_REFERENCE) String outputPath) {
         Resource outputResource = new FileSystemResource(outputPath);
         return new JsonFileItemWriterBuilder<Person>()
                 .jsonObjectMarshaller(new JacksonJsonObjectMarshaller<>())

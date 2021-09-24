@@ -10,6 +10,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.Resource;
 
+import static com.u4.springbatch.practice_one.config.AnonymizeJobParameterKeys.INPUT_PATH_REFERENCE;
 import static com.u4.springbatch.practice_one.utils.CourseUtils.getFileResource;
 
 @Configuration
@@ -17,7 +18,7 @@ public class ReaderConfiguration {
 
     @Bean("jsonItemReader")
     @StepScope
-    public JsonItemReader<Person> reader(@Value("#{jobParameters['inputPath']}") String inputPath) {
+    public JsonItemReader<Person> reader(@Value(INPUT_PATH_REFERENCE) String inputPath) {
         Resource inputResource = getFileResource(inputPath);
         return new JsonItemReaderBuilder<Person>()
                 .jsonObjectReader(new JacksonJsonObjectReader<>(Person.class))
