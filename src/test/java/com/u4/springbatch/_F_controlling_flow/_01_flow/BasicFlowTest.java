@@ -43,7 +43,12 @@ class BasicFlowTest {
         @Bean
         public Job job() {
             return jobBuilderFactory.get("myJob")
-                   .start(stepOne())
+                    .flow(stepOne())
+                    .on("COMPLETED")
+                    .end()
+                    .on("FAILED")
+                    .to(fallBackStep())
+                    .end()
                     .listener(new CourseUtilJobSummaryListener())
                     .build();
         }
@@ -52,7 +57,7 @@ class BasicFlowTest {
         public Step stepOne() {
             return stepBuilderFactory.get("stepOne")
                     .tasklet((stepContribution, chunkContext) -> {
-                        //throw new RuntimeException("failed");
+//                        throw new RuntimeException("failed");
                         return RepeatStatus.FINISHED;
                     })
                     .build();
