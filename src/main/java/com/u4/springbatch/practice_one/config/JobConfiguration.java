@@ -1,5 +1,6 @@
 package com.u4.springbatch.practice_one.config;
 
+import com.u4.springbatch.practice_one.FileHandlingJobExecutionListenerImpl;
 import com.u4.springbatch.practice_one.model.Person;
 import org.springframework.batch.core.*;
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
@@ -31,9 +32,10 @@ public class JobConfiguration {
     }
 
     @Bean
-    public Job job(ItemReader<Person> reader, ItemWriter<Person> writer) {
+    public Job job(ItemReader<Person> reader, ItemWriter<Person> writer, FileHandlingJobExecutionListenerImpl listener) {
         return jobBuilderFactory.get("anonymizeJob")
                 .start(step(reader, writer))
+                .listener(listener)
                 .validator(new AnonymizeJobParameterValidator())
                 .build();
     }
