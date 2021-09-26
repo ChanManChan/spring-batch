@@ -1,5 +1,6 @@
 package com.u4.springbatch.practice_three;
 
+import com.u4.springbatch.practice_three.dto.JobExecutionsDto;
 import com.u4.springbatch.practice_three.dto.JsonWrapper;
 import com.u4.springbatch.practice_three.jobs.SimpleJob;
 import com.u4.springbatch.practice_three.services.TriggerJobService;
@@ -15,8 +16,9 @@ import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.core.repository.JobRestartException;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping(value = "job-monitoring")
@@ -28,6 +30,7 @@ public class JobMonitoringController {
     private final JobOperator jobOperator;
     private final Job simpleJob;
     private final JobRegistry jobRegistry;
+    private final JobRepository jobRepository;
 
     public JobMonitoringController(JobRepository jobRepository,
                                    JobExplorer jobExplorer,
@@ -41,45 +44,58 @@ public class JobMonitoringController {
         this.jobOperator = jobOperator;
         this.simpleJob = simpleJob;
         this.jobRegistry = jobRegistry;
+        this.jobRepository = jobRepository;
     }
 
     @GetMapping("/job-definitions")
     public JsonWrapper jobDefinitions() {
-        return new JsonWrapper(0);
+        return new JsonWrapper(jobs.size());
     }
 
     @GetMapping("/job-names")
     public JsonWrapper getJobNames() {
-        return new JsonWrapper(List.of());
+        Collection<String> jobNames = jobRegistry.getJobNames();
+        return new JsonWrapper(jobNames);
     }
 
     @PostMapping("/job/start-new")
     public void runJob(@RequestParam(value = "jobName") String jobName) throws NoSuchJobException {
-
+        Job job = jobRegistry.getJob(jobName);
+        triggerJobService.triggerJob(job);
     }
 
     @GetMapping("/job/{jobName}/instances")
     public JsonWrapper getJobInstances(@PathVariable String jobName) {
-        return new JsonWrapper(List.of());
+        List<JobInstance> jobInstances = jobExplorer.getJobInstances(jobName, 0, 100);
+        return new JsonWrapper(jobInstances);
     }
 
     @GetMapping("/job/instance/{instanceId}")
     public JsonWrapper getJobExecutions(@PathVariable Long instanceId) {
-        return null;
+        JobInstance jobInstance = jobExplorer.getJobInstance(instanceId);
+        List<JobExecution> jobExecutions = new ArrayList<>();
+        if (jobInstance != null) {
+            jobExecutions = jobExplorer.getJobExecutions(jobInstance);
+        }
+        return new JsonWrapper(new JobExecutionsDto(jobExecutions));
     }
 
     @PostMapping("/execution/{executionId}/stop")
     public void stopExecution(@PathVariable Long executionId) throws NoSuchJobExecutionException, JobExecutionNotRunningException {
+        jobOperator.stop(executionId);
 
     }
 
     @PostMapping("/execution/{executionId}/restart")
-    public void startExecution(@PathVariable Long executionId) throws JobParametersInvalidException, JobRestartException, JobInstanceAlreadyCompleteException, NoSuchJobExecutionException, NoSuchJobException {
-
+    public void restartExecution(@PathVariable Long executionId) throws JobParametersInvalidException, JobRestartException, JobInstanceAlreadyCompleteException, NoSuchJobExecutionException, NoSuchJobException {
+        jobOperator.restart(executionId);
     }
 
     @PostMapping("/simple-job/start/{parameter}")
     public void startSimpleJobWithParameter(@PathVariable String parameter) {
-
+        JobParameters jobParameters = new JobParametersBuilder()
+                .addString("parameter", parameter)
+                .toJobParameters();
+        triggerJobService.triggerJob(simpleJob, jobParameters);
     }
 }

@@ -4470,4 +4470,11 @@
 .fas {
     font-weight: 900;
 }
+
+.ni {
+    font: unset !important;
+    font-weight: 900 !important;
+    font-family: "Font Awesome 5 Free" !important;
+}
+
 /*# sourceMappingURL=2.79838944.chunk.css.map */

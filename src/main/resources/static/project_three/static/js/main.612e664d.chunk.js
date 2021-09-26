@@ -61,9 +61,9 @@
                                                 c.a.createElement(
                                                     "div",
                                                     { className: "copyright text-center text-xl-left text-muted" },
-                                                    "\xa9 2020",
+                                                    "\xa9 2021",
                                                     " ",
-                                                    c.a.createElement("a", { className: "font-weight-bold ml-1", href: "https://christianoette.com", rel: "noopener noreferrer", target: "_blank" }, "Christian Oette")
+                                                    c.a.createElement("a", { className: "font-weight-bold ml-1", href: "https://google.com", rel: "noopener noreferrer", target: "_blank" }, "Nanda Gopal")
                                                 )
                                             )
                                         )

@@ -7,12 +7,12 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.PropertySource;
 
 @EnableAutoConfiguration
-@ComponentScan(basePackageClasses = Application.class)
+@ComponentScan(basePackageClasses = ProjectTwoApplication.class)
 @PropertySource("/context/practice_two.properties")
 @EnableBatchProcessing
-public class Application {
+public class ProjectTwoApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(Application.class);
+        SpringApplication.run(ProjectTwoApplication.class);
     }
 }
