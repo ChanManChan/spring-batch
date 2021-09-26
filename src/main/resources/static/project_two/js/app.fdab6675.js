@@ -492,7 +492,7 @@
     },
     "85ec": function (e, t, r) {},
     bf74: function (e, t, r) {
-        e.exports = r.p + "img/flight.4adb7593.jpg";
+        e.exports = r.p + "project_two/img/flight.4adb7593.jpg";
     },
     f84b: function (e, t, r) {},
 });
