@@ -26,7 +26,7 @@ public class AirlineItemReader implements ItemReader<SimulatorResponseDto> {
         if (itemsRead) {
             return null;
         } else {
-            LOGGER.info("Load result for {}",airline);
+            LOGGER.info("Load result for {}", airline);
             this.itemsRead = true;
             return simulator.getOffer(airline, LocalDate.now());
         }

@@ -10,12 +10,11 @@ import org.springframework.web.servlet.NoHandlerFoundException;
 import javax.servlet.http.HttpServletRequest;
 
 @ControllerAdvice
-public class CommonExceptionHandler
-{
+public class CommonExceptionHandler {
     private static final Logger LOGGER = LogManager.getLogger();
 
     @ExceptionHandler(NoHandlerFoundException.class)
-    public ErrorDto handleError404(HttpServletRequest request, Exception e)   {
+    public ErrorDto handleError404(HttpServletRequest request, Exception e) {
         LOGGER.warn("Request: " + request.getRequestURL() + " raised " + e);
         return new ErrorDto("404 - not found or all necessary parameters given.");
     }

@@ -6,9 +6,11 @@ import com.u4.springbatch.practice_two.configuration.JobConfiguration;
 import com.u4.springbatch.practice_two.configuration.airline.Airline;
 import com.u4.springbatch.practice_two.model.Airport;
 import com.u4.springbatch.practice_two.simulator.SimulatorResponseDto;
+import com.u4.springbatch.practice_two.simulator.airlines.AirlineRequestTimeoutException;
 import org.junit.jupiter.api.Test;
 import org.springframework.batch.core.*;
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
+import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.batch.item.ItemReader;
 import org.springframework.batch.test.JobLauncherTestUtils;
@@ -22,6 +24,8 @@ import java.time.LocalDate;
 
 import static com.u4.springbatch.practice_two.utils.CourseUtils.toDate;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 
 @SpringBootTest(classes = {AirlineJobFlowTest.TestConfig.class, JobConfiguration.class})
 @EnableBatchProcessing
@@ -66,22 +70,57 @@ class AirlineJobFlowTest {
 
         // then
         assertThat(jobExecution.getStatus()).isEqualTo(BatchStatus.COMPLETED);
-        // TODO additional assertions here!
+        verify(adiosAirlineItemReader).read();
+        verify(belarusAirlineItemReader).read();
     }
 
     @Test
     void thatDubaiAmsterdamSpecialOfferIsUsed() throws Exception {
-        // TODO add test logic here
+        // given
+        Airport departureAirport = Airport.DUBAI;
+        Airport arrivalAirport = Airport.AMSTERDAM;
+        JobParameters jobParameters = createJobParameters(departureAirport, arrivalAirport);
+
+        // when
+        JobExecution jobExecution = jobLauncherTestUtils.launchJob(jobParameters);
+
+        // then
+        assertThat(jobExecution.getStatus()).isEqualTo(BatchStatus.COMPLETED);
+        verify(saveDubaiAmsterdamOffer).execute(any(StepContribution.class), any(ChunkContext.class));
+        verify(adiosAirlineItemReader, never()).read();
+        verify(belarusAirlineItemReader, never()).read();
     }
 
     @Test
     void thatNewYorkAmsterdamSpecialOfferIsUsed() throws Exception {
-        // TODO add test logic here
+        // given
+        Airport departureAirport = Airport.NEWYORK;
+        Airport arrivalAirport = Airport.AMSTERDAM;
+        JobParameters jobParameters = createJobParameters(departureAirport, arrivalAirport);
+
+        // when
+        JobExecution jobExecution = jobLauncherTestUtils.launchJob(jobParameters);
+
+        // then
+        assertThat(jobExecution.getStatus()).isEqualTo(BatchStatus.COMPLETED);
+        verify(saveNewYorkAmsterdamOffer).execute(any(StepContribution.class), any(ChunkContext.class));
+        verify(adiosAirlineItemReader).read();
+        verify(belarusAirlineItemReader).read();
     }
 
     @Test
     void thatTimeoutIsSkipped() throws Exception {
-        // TODO add test logic here
+        // given
+        Airport departureAirport = Airport.LONDON;
+        Airport arrivalAirport = Airport.PARIS;
+        JobParameters jobParameters = createJobParameters(departureAirport, arrivalAirport);
+        when(flyUsAirlineItemReader.read()).thenThrow(new AirlineRequestTimeoutException()).thenReturn(null);
+
+        // when
+        JobExecution jobExecution = jobLauncherTestUtils.launchJob(jobParameters);
+
+        // then
+        assertThat(jobExecution.getStatus()).isEqualTo(BatchStatus.COMPLETED);
     }
 
     @Configuration

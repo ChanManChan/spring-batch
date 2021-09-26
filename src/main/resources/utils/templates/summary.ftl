@@ -26,15 +26,14 @@
         Parameters ${jobExecution.jobParameters!""}
         Running: ${jobExecution.running?string('yes', 'no')!""}
         Status: ${jobExecution.status!""}
-        ExitStatus: ${jobExecution.exitStatus?truncate(100)!""}
         StartTime: ${jobExecution.startTime?string('HH:mm:ss')!""}
         EndTime: ${jobExecution.endTime?string('HH:mm:ss')!""}
         Steps:
         <#list jobExecution.stepExecutions as stepExecution>
-             ${stepExecution.stepName!""}
+
+                ${stepExecution.stepName!""}
                 - Id: ${stepExecution.id!""}
                 - Status: ${stepExecution.status!""}
-                - ExitStatus: ${stepExecution.exitStatus?truncate(100)!""}
                 - ReadCount | WriteCount | FilterCount: ${stepExecution.readCount!""} | ${stepExecution.writeCount!""} | ${stepExecution.filterCount!""}
                 - ReadSkipCount | WriteSkipCount | ProcessSkipCount: ${stepExecution.readSkipCount!""} | ${stepExecution.writeSkipCount!""} | ${stepExecution.processSkipCount!""}
                 - CommitCount: ${stepExecution.commitCount!""}

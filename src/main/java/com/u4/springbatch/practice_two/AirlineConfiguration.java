@@ -31,6 +31,7 @@ public class AirlineConfiguration {
 
     public static final String NEW_YORK_AMSTERDAM_OFFER_TASKLET = "saveNewYorkAmsterdamOffer";
     public static final String DUBAI_AMSTERDAM_OFFER_TASKLET = "saveDubaiAmsterdamOffer";
+    public static final String NO_OFFER_TASKLET = "noOfferTasklet";
 
     @Autowired
     public AirlineConfiguration(AirlineResponseSimulator simulator,
